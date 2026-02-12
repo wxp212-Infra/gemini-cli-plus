@@ -394,6 +394,7 @@ export interface ConfigParameters {
   includeDirectories?: string[];
   bugCommand?: BugCommandSettings;
   model: string;
+  contentGenerationConfig?: Partial<ContentGeneratorConfig>;
   disableLoopDetection?: boolean;
   maxSessionTurns?: number;
   experimentalZedIntegration?: boolean;
@@ -700,6 +701,7 @@ export class Config {
     this.fileDiscoveryService = params.fileDiscoveryService ?? null;
     this.bugCommand = params.bugCommand;
     this.model = params.model;
+    this.contentGeneratorConfig = params.contentGenerationConfig ?? {};
     this.disableLoopDetection = params.disableLoopDetection ?? false;
     this._activeModel = params.model;
     this.enableAgents = params.enableAgents ?? false;
@@ -1006,8 +1008,9 @@ export class Config {
 
     const authType = this.contentGeneratorConfig.authType;
     if (
-      authType === AuthType.USE_GEMINI ||
-      authType === AuthType.USE_VERTEX_AI
+      /* authType === AuthType.USE_GEMINI ||
+      authType === AuthType.USE_VERTEX_AI */
+      authType === AuthType.USE_GEMINI
     ) {
       this.setHasAccessToPreviewModel(true);
     }
@@ -1073,6 +1076,10 @@ export class Config {
 
   getSessionId(): string {
     return this.sessionId;
+  }
+
+  getCliVersion(): string | undefined {
+    return this.clientVersion;
   }
 
   setSessionId(sessionId: string): void {

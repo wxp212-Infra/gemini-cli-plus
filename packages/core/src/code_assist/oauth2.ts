@@ -7,7 +7,6 @@
 import type { Credentials, AuthClient, JWTInput } from 'google-auth-library';
 import {
   OAuth2Client,
-  Compute,
   CodeChallengeMethod,
   GoogleAuth,
 } from 'google-auth-library';
@@ -26,7 +25,7 @@ import {
   FatalCancellationError,
 } from '../utils/errors.js';
 import { UserAccountManager } from '../utils/userAccountManager.js';
-import { AuthType } from '../core/contentGenerator.js';
+import type { AuthType } from '../core/contentGenerator.js';
 import readline from 'node:readline';
 import { Storage } from '../config/storage.js';
 import { OAuthCredentialStorage } from './oauth-credential-storage.js';
@@ -198,7 +197,7 @@ async function initOauthClient(
   // In Google Compute Engine based environments (including Cloud Shell), we can
   // use Application Default Credentials (ADC) provided via its metadata server
   // to authenticate non-interactively using the identity of the logged-in user.
-  if (authType === AuthType.COMPUTE_ADC) {
+  /* if (authType === AuthType.COMPUTE_ADC) {
     try {
       debugLogger.log(
         'Attempting to authenticate via metadata server application default credentials.',
@@ -220,7 +219,7 @@ async function initOauthClient(
         )}`,
       );
     }
-  }
+  } */
 
   if (config.isBrowserLaunchSuppressed()) {
     let success = false;

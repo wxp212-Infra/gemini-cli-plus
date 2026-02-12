@@ -245,7 +245,7 @@ async function refreshAuthentication(
   logPrefix: string,
 ): Promise<void> {
   if (process.env['USE_CCPA']) {
-    logger.info(`[${logPrefix}] Using CCPA Auth:`);
+    /* logger.info(`[${logPrefix}] Using CCPA Auth:`);
     try {
       if (adcFilePath) {
         path.resolve(adcFilePath);
@@ -258,7 +258,8 @@ async function refreshAuthentication(
     await config.refreshAuth(AuthType.LOGIN_WITH_GOOGLE);
     logger.info(
       `[${logPrefix}] GOOGLE_CLOUD_PROJECT: ${process.env['GOOGLE_CLOUD_PROJECT']}`,
-    );
+    ); */
+    throw new Error("don't support USE_CCPA");
   } else if (process.env['GEMINI_API_KEY']) {
     logger.info(`[${logPrefix}] Using Gemini API Key`);
     await config.refreshAuth(AuthType.USE_GEMINI);

@@ -22,7 +22,7 @@ export async function performInitialAuth(
   authType: AuthType | undefined,
 ): Promise<string | null> {
   if (!authType) {
-    return null;
+    return `no authType`;
   }
 
   try {

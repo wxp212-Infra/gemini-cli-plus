@@ -80,10 +80,9 @@ export class StartSessionEvent implements BaseTelemetryEvent {
       config.getMcpClientManager()?.getMcpServers() ?? config.getMcpServers();
 
     let useGemini = false;
-    let useVertex = false;
+    const useVertex = false;
     if (generatorConfig && generatorConfig.authType) {
       useGemini = generatorConfig.authType === AuthType.USE_GEMINI;
-      useVertex = generatorConfig.authType === AuthType.USE_VERTEX_AI;
     }
 
     this['event.name'] = 'cli_config';

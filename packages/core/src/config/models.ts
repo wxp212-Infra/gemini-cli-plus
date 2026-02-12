@@ -3,7 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
+import { AuthType } from '../core/contentGenerator.js';
 
+// gemini:
 export const PREVIEW_GEMINI_MODEL = 'gemini-3-pro-preview';
 export const PREVIEW_GEMINI_FLASH_MODEL = 'gemini-3-flash-preview';
 export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-pro';
@@ -32,6 +34,26 @@ export const DEFAULT_GEMINI_EMBEDDING_MODEL = 'gemini-embedding-001';
 // Cap the thinking at 8192 to prevent run-away thinking loops.
 export const DEFAULT_THINKING_MODE = 8192;
 
+// openai:
+export const PREVIEW_OPENAI_MODEL = 'glm-5';
+export const PREVIEW_OPENAI_FLASH_MODEL = 'glm-4.7-flashx';
+export const DEFAULT_OPENAI_MODEL = 'glm-4.7';
+export const DEFAULT_OPENAI_FLASH_MODEL = 'glm-4.7-flashx';
+
+export const VALID_OPENAI_MODELS = new Set([
+  PREVIEW_OPENAI_MODEL,
+  PREVIEW_OPENAI_FLASH_MODEL,
+  DEFAULT_OPENAI_MODEL,
+  DEFAULT_OPENAI_FLASH_MODEL,
+]);
+
+export const PREVIEW_OPENAI_MODEL_AUTO = 'auto-openai-preview';
+export const DEFAULT_OPENAI_MODEL_AUTO = 'auto-openai';
+
+// Model aliases for user convenience.
+export const OPENAI_MODEL_ALIAS_AUTO = 'auto';
+export const OPENAI_MODEL_ALIAS_FLASH = 'flash';
+
 /**
  * Resolves the requested model alias (e.g., 'auto-gemini-3', 'pro', 'flash', 'flash-lite')
  * to a concrete model name, considering preview features.
@@ -43,30 +65,55 @@ export const DEFAULT_THINKING_MODE = 8192;
 export function resolveModel(
   requestedModel: string,
   previewFeaturesEnabled: boolean = false,
+  authType: AuthType = AuthType.USE_OPENAI,
 ): string {
-  switch (requestedModel) {
-    case PREVIEW_GEMINI_MODEL_AUTO: {
-      return PREVIEW_GEMINI_MODEL;
+  if (authType === AuthType.USE_GEMINI) {
+    switch (requestedModel) {
+      case PREVIEW_GEMINI_MODEL_AUTO: {
+        return PREVIEW_GEMINI_MODEL;
+      }
+      case DEFAULT_GEMINI_MODEL_AUTO: {
+        return DEFAULT_GEMINI_MODEL;
+      }
+      case GEMINI_MODEL_ALIAS_AUTO:
+      case GEMINI_MODEL_ALIAS_PRO: {
+        return previewFeaturesEnabled
+          ? PREVIEW_GEMINI_MODEL
+          : DEFAULT_GEMINI_MODEL;
+      }
+      case GEMINI_MODEL_ALIAS_FLASH: {
+        return previewFeaturesEnabled
+          ? PREVIEW_GEMINI_FLASH_MODEL
+          : DEFAULT_GEMINI_FLASH_MODEL;
+      }
+      case GEMINI_MODEL_ALIAS_FLASH_LITE: {
+        return DEFAULT_GEMINI_FLASH_LITE_MODEL;
+      }
+      default: {
+        return requestedModel;
+      }
     }
-    case DEFAULT_GEMINI_MODEL_AUTO: {
-      return DEFAULT_GEMINI_MODEL;
-    }
-    case GEMINI_MODEL_ALIAS_AUTO:
-    case GEMINI_MODEL_ALIAS_PRO: {
-      return previewFeaturesEnabled
-        ? PREVIEW_GEMINI_MODEL
-        : DEFAULT_GEMINI_MODEL;
-    }
-    case GEMINI_MODEL_ALIAS_FLASH: {
-      return previewFeaturesEnabled
-        ? PREVIEW_GEMINI_FLASH_MODEL
-        : DEFAULT_GEMINI_FLASH_MODEL;
-    }
-    case GEMINI_MODEL_ALIAS_FLASH_LITE: {
-      return DEFAULT_GEMINI_FLASH_LITE_MODEL;
-    }
-    default: {
-      return requestedModel;
+  } else {
+    switch (requestedModel) {
+      case PREVIEW_OPENAI_MODEL_AUTO: {
+        return PREVIEW_OPENAI_MODEL;
+      }
+      case DEFAULT_OPENAI_MODEL_AUTO: {
+        return DEFAULT_OPENAI_MODEL;
+      }
+      case OPENAI_MODEL_ALIAS_AUTO: {
+        return previewFeaturesEnabled
+          ? PREVIEW_OPENAI_MODEL
+          : DEFAULT_OPENAI_MODEL;
+      }
+      case OPENAI_MODEL_ALIAS_FLASH: {
+        return previewFeaturesEnabled
+          ? PREVIEW_OPENAI_FLASH_MODEL
+          : DEFAULT_OPENAI_FLASH_MODEL;
+      }
+      default: {
+        return requestedModel;
+      }
     }
   }
 }
@@ -83,43 +130,64 @@ export function resolveClassifierModel(
   requestedModel: string,
   modelAlias: string,
   previewFeaturesEnabled: boolean = false,
+  authType: AuthType = AuthType.USE_OPENAI,
 ): string {
-  if (modelAlias === GEMINI_MODEL_ALIAS_FLASH) {
-    if (
-      requestedModel === DEFAULT_GEMINI_MODEL_AUTO ||
-      requestedModel === DEFAULT_GEMINI_MODEL
-    ) {
-      return DEFAULT_GEMINI_FLASH_MODEL;
+  // reset to flash model only when authType === AuthType.USE_GEMINI
+  if (authType === AuthType.USE_GEMINI) {
+    if (modelAlias === GEMINI_MODEL_ALIAS_FLASH) {
+      if (
+        requestedModel === DEFAULT_GEMINI_MODEL_AUTO ||
+        requestedModel === DEFAULT_GEMINI_MODEL
+      ) {
+        return DEFAULT_GEMINI_FLASH_MODEL;
+      }
+      if (
+        requestedModel === PREVIEW_GEMINI_MODEL_AUTO ||
+        requestedModel === PREVIEW_GEMINI_MODEL
+      ) {
+        return PREVIEW_GEMINI_FLASH_MODEL;
+      }
+      return resolveModel(GEMINI_MODEL_ALIAS_FLASH, previewFeaturesEnabled);
     }
-    if (
-      requestedModel === PREVIEW_GEMINI_MODEL_AUTO ||
-      requestedModel === PREVIEW_GEMINI_MODEL
-    ) {
-      return PREVIEW_GEMINI_FLASH_MODEL;
-    }
-    return resolveModel(GEMINI_MODEL_ALIAS_FLASH, previewFeaturesEnabled);
   }
   return resolveModel(requestedModel, previewFeaturesEnabled);
 }
+
 export function getDisplayString(
   model: string,
   previewFeaturesEnabled: boolean = false,
+  authType: AuthType = AuthType.USE_OPENAI,
 ) {
-  switch (model) {
-    case PREVIEW_GEMINI_MODEL_AUTO:
-      return 'Auto (Gemini 3)';
-    case DEFAULT_GEMINI_MODEL_AUTO:
-      return 'Auto (Gemini 2.5)';
-    case GEMINI_MODEL_ALIAS_PRO:
-      return previewFeaturesEnabled
-        ? PREVIEW_GEMINI_MODEL
-        : DEFAULT_GEMINI_MODEL;
-    case GEMINI_MODEL_ALIAS_FLASH:
-      return previewFeaturesEnabled
-        ? PREVIEW_GEMINI_FLASH_MODEL
-        : DEFAULT_GEMINI_FLASH_MODEL;
-    default:
-      return model;
+  if (authType === AuthType.USE_GEMINI) {
+    switch (model) {
+      case PREVIEW_GEMINI_MODEL_AUTO:
+        return 'Auto (Gemini 3)';
+      case DEFAULT_GEMINI_MODEL_AUTO:
+        return 'Auto (Gemini 2.5)';
+      case GEMINI_MODEL_ALIAS_PRO:
+        return previewFeaturesEnabled
+          ? PREVIEW_GEMINI_MODEL
+          : DEFAULT_GEMINI_MODEL;
+      case GEMINI_MODEL_ALIAS_FLASH:
+        return previewFeaturesEnabled
+          ? PREVIEW_GEMINI_FLASH_MODEL
+          : DEFAULT_GEMINI_FLASH_MODEL;
+      default:
+        return model;
+    }
+  } else {
+    switch (model) {
+      case PREVIEW_OPENAI_MODEL_AUTO:
+        return 'Auto (OpenAI preview)';
+      case DEFAULT_OPENAI_MODEL_AUTO:
+        return 'Auto (OpenAI)';
+      case OPENAI_MODEL_ALIAS_FLASH:
+        return previewFeaturesEnabled
+          ? PREVIEW_OPENAI_FLASH_MODEL
+          : DEFAULT_OPENAI_FLASH_MODEL;
+      default:
+        return model;
+    }
   }
 }
 
@@ -133,7 +201,10 @@ export function isPreviewModel(model: string): boolean {
   return (
     model === PREVIEW_GEMINI_MODEL ||
     model === PREVIEW_GEMINI_FLASH_MODEL ||
-    model === PREVIEW_GEMINI_MODEL_AUTO
+    model === PREVIEW_GEMINI_MODEL_AUTO ||
+    model === PREVIEW_OPENAI_MODEL ||
+    model === PREVIEW_OPENAI_FLASH_MODEL ||
+    model === PREVIEW_OPENAI_MODEL_AUTO
   );
 }
 
@@ -157,7 +228,10 @@ export function isAutoModel(model: string): boolean {
   return (
     model === GEMINI_MODEL_ALIAS_AUTO ||
     model === PREVIEW_GEMINI_MODEL_AUTO ||
-    model === DEFAULT_GEMINI_MODEL_AUTO
+    model === DEFAULT_GEMINI_MODEL_AUTO ||
+    model === PREVIEW_OPENAI_MODEL_AUTO ||
+    model === DEFAULT_OPENAI_MODEL_AUTO ||
+    model === OPENAI_MODEL_ALIAS_AUTO
   );
 }
 

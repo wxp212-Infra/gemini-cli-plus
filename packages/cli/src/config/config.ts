@@ -11,12 +11,18 @@ import { mcpCommand } from '../commands/mcp.js';
 import { extensionsCommand } from '../commands/extensions.js';
 import { skillsCommand } from '../commands/skills.js';
 import { hooksCommand } from '../commands/hooks.js';
+import type {
+  HookDefinition,
+  ContentGeneratorConfig,
+
+  HookEventName,
+  OutputFormat} from '@google/gemini-cli-core';
 import {
   Config,
   setGeminiMdFilename as setServerGeminiMdFilename,
   getCurrentGeminiMdFilename,
   ApprovalMode,
-  DEFAULT_GEMINI_MODEL_AUTO,
+  DEFAULT_OPENAI_MODEL_AUTO,
   DEFAULT_GEMINI_EMBEDDING_MODEL,
   DEFAULT_FILE_FILTERING_OPTIONS,
   DEFAULT_MEMORY_FILE_FILTERING_OPTIONS,
@@ -32,16 +38,12 @@ import {
   loadServerHierarchicalMemory,
   WEB_FETCH_TOOL_NAME,
   getVersion,
-  PREVIEW_GEMINI_MODEL_AUTO,
+  PREVIEW_OPENAI_MODEL_AUTO,
   coreEvents,
   GEMINI_MODEL_ALIAS_AUTO,
   getAdminErrorMessage,
   isHeadlessMode,
-} from '@google/gemini-cli-core';
-import type {
-  HookDefinition,
-  HookEventName,
-  OutputFormat,
+  AuthType,
 } from '@google/gemini-cli-core';
 import {
   type Settings,
@@ -664,8 +666,8 @@ export async function loadCliConfig(
   policyEngineConfig.nonInteractive = !interactive;
 
   const defaultModel = settings.general?.previewFeatures
-    ? PREVIEW_GEMINI_MODEL_AUTO
-    : DEFAULT_GEMINI_MODEL_AUTO;
+    ? PREVIEW_OPENAI_MODEL_AUTO
+    : DEFAULT_OPENAI_MODEL_AUTO;
   const specifiedModel =
     argv.model || process.env['GEMINI_MODEL'] || settings.model?.name;
 
@@ -673,6 +675,15 @@ export async function loadCliConfig(
     specifiedModel === GEMINI_MODEL_ALIAS_AUTO
       ? defaultModel
       : specifiedModel || defaultModel;
+
+  const contentGenerationConfig: Partial<ContentGeneratorConfig> = {
+    authType: settings.security.auth.selectedType || AuthType.USE_OPENAI,
+    baseUrl:
+      settings.security.auth.baseUrl || 'https://open.bigmodel.cn/api/paas/v4',
+    apiKey: settings.security.auth.apiKey,
+    model: resolvedModel,
+  };
+
   const sandboxConfig = await loadSandboxConfig(settings, argv);
   const screenReader =
     argv.screenReader !== undefined
@@ -753,6 +764,7 @@ export async function loadCliConfig(
     fileDiscoveryService: fileService,
     bugCommand: settings.advanced?.bugCommand,
     model: resolvedModel,
+    contentGenerationConfig,
     maxSessionTurns: settings.model?.maxSessionTurns,
     experimentalZedIntegration: argv.experimentalAcp || false,
     listExtensions: argv.listExtensions || false,

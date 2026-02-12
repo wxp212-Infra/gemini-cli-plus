@@ -5,21 +5,19 @@
  */
 
 import type { ContentGenerator } from '../core/contentGenerator.js';
-import { AuthType } from '../core/contentGenerator.js';
-import { getOauthClient } from './oauth2.js';
-import { setupUser } from './setup.js';
+import type { AuthType } from '../core/contentGenerator.js';
 import type { HttpOptions } from './server.js';
 import { CodeAssistServer } from './server.js';
 import type { Config } from '../config/config.js';
 import { LoggingContentGenerator } from '../core/loggingContentGenerator.js';
 
 export async function createCodeAssistContentGenerator(
-  httpOptions: HttpOptions,
+  _httpOptions: HttpOptions,
   authType: AuthType,
-  config: Config,
-  sessionId?: string,
+  _config: Config,
+  _sessionId?: string,
 ): Promise<ContentGenerator> {
-  if (
+  /* if (
     authType === AuthType.LOGIN_WITH_GOOGLE ||
     authType === AuthType.COMPUTE_ADC
   ) {
@@ -33,7 +31,7 @@ export async function createCodeAssistContentGenerator(
       userData.userTier,
       userData.userTierName,
     );
-  }
+  } */
 
   throw new Error(`Unsupported authType: ${authType}`);
 }

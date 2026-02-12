@@ -99,7 +99,7 @@ export class LoggingContentGenerator implements ContentGenerator {
       return { address: url.hostname, port };
     }
 
-    const genConfig = this.config.getContentGeneratorConfig();
+    /* const genConfig = this.config.getContentGeneratorConfig();
 
     // Case 2: Using an API key for Vertex AI.
     if (genConfig?.vertexai) {
@@ -109,7 +109,7 @@ export class LoggingContentGenerator implements ContentGenerator {
       } else {
         return { address: 'unknown', port: 0 };
       }
-    }
+    } */
 
     // Case 3: Default to the public Gemini API endpoint.
     // This is used when an API key is provided but not for Vertex AI.

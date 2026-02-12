@@ -96,6 +96,24 @@ export const DEFAULT_MODEL_CONFIGS: ModelConfigServiceConfig = {
         model: 'gemini-2.5-flash',
       },
     },
+    'glm-4.7': {
+      extends: 'chat-base',
+      modelConfig: {
+        model: 'glm-4.7',
+      },
+    },
+    'glm-4.7-flashx': {
+      extends: 'chat-base',
+      modelConfig: {
+        model: 'glm-4.7-flashx',
+      },
+    },
+    'glm-5': {
+      extends: 'chat-base',
+      modelConfig: {
+        model: 'glm-5',
+      },
+    },
     classifier: {
       extends: 'base',
       modelConfig: {
@@ -111,7 +129,7 @@ export const DEFAULT_MODEL_CONFIGS: ModelConfigServiceConfig = {
     'prompt-completion': {
       extends: 'base',
       modelConfig: {
-        model: 'gemini-2.5-flash-lite',
+        model: 'glm-4.7',
         generateContentConfig: {
           temperature: 0.3,
           maxOutputTokens: 16000,
@@ -124,7 +142,7 @@ export const DEFAULT_MODEL_CONFIGS: ModelConfigServiceConfig = {
     'edit-corrector': {
       extends: 'base',
       modelConfig: {
-        model: 'gemini-2.5-flash-lite',
+        model: 'glm-4.7',
         generateContentConfig: {
           thinkingConfig: {
             thinkingBudget: 0,
@@ -135,7 +153,7 @@ export const DEFAULT_MODEL_CONFIGS: ModelConfigServiceConfig = {
     'summarizer-default': {
       extends: 'base',
       modelConfig: {
-        model: 'gemini-2.5-flash-lite',
+        model: 'glm-4.7',
         generateContentConfig: {
           maxOutputTokens: 2000,
         },
@@ -144,14 +162,14 @@ export const DEFAULT_MODEL_CONFIGS: ModelConfigServiceConfig = {
     'summarizer-shell': {
       extends: 'base',
       modelConfig: {
-        model: 'gemini-2.5-flash-lite',
+        model: 'glm-4.7',
         generateContentConfig: {
           maxOutputTokens: 2000,
         },
       },
     },
     'web-search': {
-      extends: 'gemini-2.5-flash-base',
+      extends: 'glm-4.7',
       modelConfig: {
         generateContentConfig: {
           tools: [{ googleSearch: {} }],
@@ -159,7 +177,7 @@ export const DEFAULT_MODEL_CONFIGS: ModelConfigServiceConfig = {
       },
     },
     'web-fetch': {
-      extends: 'gemini-2.5-flash-base',
+      extends: 'glm-4.7',
       modelConfig: {
         generateContentConfig: {
           tools: [{ urlContext: {} }],
@@ -168,55 +186,55 @@ export const DEFAULT_MODEL_CONFIGS: ModelConfigServiceConfig = {
     },
     // TODO(joshualitt): During cleanup, make modelConfig optional.
     'web-fetch-fallback': {
-      extends: 'gemini-2.5-flash-base',
+      extends: 'glm-4.7',
       modelConfig: {},
     },
     'loop-detection': {
-      extends: 'gemini-2.5-flash-base',
+      extends: 'glm-4.7',
       modelConfig: {},
     },
     'loop-detection-double-check': {
       extends: 'base',
       modelConfig: {
-        model: 'gemini-2.5-pro',
+        model: 'glm-4.7',
       },
     },
     'llm-edit-fixer': {
-      extends: 'gemini-2.5-flash-base',
+      extends: 'glm-4.7',
       modelConfig: {},
     },
     'next-speaker-checker': {
-      extends: 'gemini-2.5-flash-base',
+      extends: 'glm-4.7',
       modelConfig: {},
     },
     'chat-compression-3-pro': {
       modelConfig: {
-        model: 'gemini-3-pro-preview',
+        model: 'glm-4.7',
       },
     },
     'chat-compression-3-flash': {
       modelConfig: {
-        model: 'gemini-3-flash-preview',
+        model: 'glm-4.7',
       },
     },
     'chat-compression-2.5-pro': {
       modelConfig: {
-        model: 'gemini-2.5-pro',
+        model: 'glm-4.7',
       },
     },
     'chat-compression-2.5-flash': {
       modelConfig: {
-        model: 'gemini-2.5-flash',
+        model: 'glm-4.7',
       },
     },
     'chat-compression-2.5-flash-lite': {
       modelConfig: {
-        model: 'gemini-2.5-flash-lite',
+        model: 'glm-4.7',
       },
     },
     'chat-compression-default': {
       modelConfig: {
-        model: 'gemini-2.5-pro',
+        model: 'glm-4.7',
       },
     },
   },
