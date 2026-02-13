@@ -76,6 +76,11 @@ export function AuthDialog({
       value: AuthType.USE_VERTEX_AI,
       key: AuthType.USE_VERTEX_AI,
     },
+    {
+      label: 'Use OPENAI API Key',
+      value: AuthType.USE_OPENAI,
+      key: AuthType.USE_OPENAI,
+    },
   ];
 
   if (settings.merged.security.auth.enforcedType) {
@@ -146,6 +151,11 @@ export function AuthDialog({
             setAuthState(AuthState.AwaitingApiKeyInput);
             return;
           }
+        }
+
+        if (authType === AuthType.USE_OPENAI) {
+          setAuthState(AuthState.AwaitingApiKeyInput);
+          return;
         }
       }
       setAuthState(AuthState.Unauthenticated);
