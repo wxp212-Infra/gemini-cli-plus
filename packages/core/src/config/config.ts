@@ -394,6 +394,7 @@ export interface ConfigParameters {
   includeDirectories?: string[];
   bugCommand?: BugCommandSettings;
   model: string;
+  contentGeneratorConfig?: Partial<ContentGeneratorConfig>;
   disableLoopDetection?: boolean;
   maxSessionTurns?: number;
   experimentalZedIntegration?: boolean;
@@ -700,6 +701,7 @@ export class Config {
     this.fileDiscoveryService = params.fileDiscoveryService ?? null;
     this.bugCommand = params.bugCommand;
     this.model = params.model;
+    this.contentGeneratorConfig = params.contentGeneratorConfig ?? {};
     this.disableLoopDetection = params.disableLoopDetection ?? false;
     this._activeModel = params.model;
     this.enableAgents = params.enableAgents ?? false;

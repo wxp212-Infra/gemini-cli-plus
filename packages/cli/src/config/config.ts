@@ -37,11 +37,13 @@ import {
   GEMINI_MODEL_ALIAS_AUTO,
   getAdminErrorMessage,
   isHeadlessMode,
+  AuthType,
 } from '@google/gemini-cli-core';
 import type {
   HookDefinition,
   HookEventName,
   OutputFormat,
+  ContentGeneratorConfig,
 } from '@google/gemini-cli-core';
 import {
   type Settings,
@@ -673,6 +675,15 @@ export async function loadCliConfig(
     specifiedModel === GEMINI_MODEL_ALIAS_AUTO
       ? defaultModel
       : specifiedModel || defaultModel;
+
+  const contentGeneratorConfig: Partial<ContentGeneratorConfig> = {};
+  if (settings.security.auth.selectedType === AuthType.USE_OPENAI) {
+    contentGeneratorConfig.authType = AuthType.USE_OPENAI;
+    contentGeneratorConfig.baseUrl = settings.security.auth.baseUrl;
+    contentGeneratorConfig.apiKey = settings.security.auth.apiKey;
+    contentGeneratorConfig.model = resolvedModel;
+  }
+
   const sandboxConfig = await loadSandboxConfig(settings, argv);
   const screenReader =
     argv.screenReader !== undefined
@@ -753,6 +764,7 @@ export async function loadCliConfig(
     fileDiscoveryService: fileService,
     bugCommand: settings.advanced?.bugCommand,
     model: resolvedModel,
+    contentGeneratorConfig,
     maxSessionTurns: settings.model?.maxSessionTurns,
     experimentalZedIntegration: argv.experimentalAcp || false,
     listExtensions: argv.listExtensions || false,
