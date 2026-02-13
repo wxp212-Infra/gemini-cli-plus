@@ -5,13 +5,13 @@
  */
 
 import type React from 'react';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { Box, Text } from 'ink';
 import { theme } from '../semantic-colors.js';
 import { TextInput } from '../components/shared/TextInput.js';
 import { useTextBuffer } from '../components/shared/text-buffer.js';
 import { useUIState } from '../contexts/UIStateContext.js';
-import { clearApiKey, debugLogger , AuthType } from '@google/gemini-cli-core';
+import { clearApiKey, debugLogger, AuthType } from '@google/gemini-cli-core';
 import { useKeypress } from '../hooks/useKeypress.js';
 import { keyMatchers, Command } from '../keyMatchers.js';
 import type { LoadedSettings } from '../../config/settings.js';
@@ -26,6 +26,140 @@ interface ApiAuthDialogProps {
   setAuthContext: (context: { requiresRestart?: boolean }) => void;
   error?: string | null;
   defaultValue?: string;
+}
+
+// Gemini API Key 表单
+function GeminiApiKeyForm({
+  apiKeyBuffer,
+  onSubmit,
+  onCancel,
+}: {
+  apiKeyBuffer: ReturnType<typeof useTextBuffer>;
+  onSubmit: (value: string) => void;
+  onCancel: () => void;
+}): React.JSX.Element {
+  return (
+    <>
+      <Box marginTop={1} flexDirection="column">
+        <Text color={theme.text.primary}>
+          Please enter your Gemini API key. It will be securely stored in your
+          system keychain.
+        </Text>
+        <Text color={theme.text.secondary}>
+          You can get an API key from{' '}
+          <Text color={theme.text.link}>
+            https://aistudio.google.com/app/apikey
+          </Text>
+        </Text>
+      </Box>
+      <Box marginTop={1} flexDirection="row">
+        <Box
+          borderStyle="round"
+          borderColor={theme.border.default}
+          paddingX={1}
+          flexGrow={1}
+        >
+          <TextInput
+            buffer={apiKeyBuffer}
+            onSubmit={onSubmit}
+            onCancel={onCancel}
+            placeholder="Paste your API key here"
+          />
+        </Box>
+      </Box>
+    </>
+  );
+}
+
+// Third-party API Form with multi-field support
+function ThirdPartyApiForm({
+  apiKeyBuffer,
+  baseUrlBuffer,
+  focusedField,
+  onFocusChange,
+  onSubmit,
+  onCancel,
+  settings,
+}: {
+  apiKeyBuffer: ReturnType<typeof useTextBuffer>;
+  baseUrlBuffer: ReturnType<typeof useTextBuffer>;
+  focusedField: 'apiKey' | 'baseUrl';
+  onFocusChange: (field: 'apiKey' | 'baseUrl') => void;
+  onSubmit: () => void;
+  onCancel: () => void;
+  settings: LoadedSettings;
+}): React.JSX.Element {
+  // Handle Tab to switch focus
+  useKeypress(
+    (key) => {
+      if (key.name === 'tab') {
+        onFocusChange(focusedField === 'apiKey' ? 'baseUrl' : 'apiKey');
+        return true;
+      }
+      return false;
+    },
+    { isActive: true },
+  );
+
+  return (
+    <>
+      <Box marginTop={1} flexDirection="column">
+        <Text color={theme.text.primary}>
+          Please enter your {settings.merged.security.auth.selectedType} API key
+          and base URL. They will be securely stored in your system keychain.
+        </Text>
+        <Text color={theme.text.secondary}>
+          You can get an API key from{' '}
+          <Text color={theme.text.link}>your LLM provider&apos;s website</Text>
+        </Text>
+      </Box>
+      <Box marginTop={1} flexDirection="row">
+        <Box
+          borderStyle="round"
+          borderColor={
+            focusedField === 'apiKey'
+              ? theme.border.focused
+              : theme.border.default
+          }
+          paddingX={1}
+          flexGrow={1}
+        >
+          <TextInput
+            buffer={apiKeyBuffer}
+            onSubmit={onSubmit}
+            onCancel={onCancel}
+            placeholder="Paste your API key here"
+            focus={focusedField === 'apiKey'}
+          />
+        </Box>
+      </Box>
+      <Box marginTop={1} flexDirection="row">
+        <Box
+          borderStyle="round"
+          borderColor={
+            focusedField === 'baseUrl'
+              ? theme.border.focused
+              : theme.border.default
+          }
+          paddingX={1}
+          flexGrow={1}
+        >
+          <TextInput
+            buffer={baseUrlBuffer}
+            onSubmit={onSubmit}
+            onCancel={onCancel}
+            placeholder="Enter base URL (e.g., https://api.openai.com/v1)"
+            focus={focusedField === 'baseUrl'}
+          />
+        </Box>
+      </Box>
+      <Box marginTop={1}>
+        <Text color={theme.text.secondary}>
+          (Press Tab to switch between fields)
+        </Text>
+      </Box>
+    </>
+  );
 }
 
 export function ApiAuthDialog({
@@ -51,7 +185,7 @@ export function ApiAuthDialog({
 
   const initialApiKey = defaultValue;
 
-  const buffer = useTextBuffer({
+  const apiKeyBuffer = useTextBuffer({
     initialText: initialApiKey || '',
     initialCursorOffset: initialApiKey?.length || 0,
     viewport: {
@@ -64,17 +198,51 @@ export function ApiAuthDialog({
     singleLine: true,
   });
 
-  const handleSubmit = (value: string) => {
-    if (settings.merged.security.auth.selectedType === AuthType.USE_GEMINI) {
-      onSubmit(value);
-    } else {
-      settings.setValue(SettingScope.User, 'security.auth.apiKey', value);
-      setAuthContext({ requiresRestart: true });
-      setAuthState(AuthState.Unauthenticated);
-    }
-  };
+  const initialBaseUrl = settings.merged.security.auth.baseUrl || '';
 
-  const handleClear = () => {
+  const baseUrlBuffer = useTextBuffer({
+    initialText: initialBaseUrl,
+    initialCursorOffset: initialBaseUrl.length,
+    viewport: {
+      width: viewportWidth,
+      height: 4,
+    },
+    isValidPath: () => false,
+    inputFilter: (text) => text.replace(/[\r\n]/g, ''),
+    singleLine: true,
+  });
+
+  const isGemini =
+    settings.merged.security.auth.selectedType === AuthType.USE_GEMINI;
+
+  // Track which field is focused for third-party form
+  const [focusedField, setFocusedField] = useState<'apiKey' | 'baseUrl'>(
+    'apiKey',
+  );
+
+  const handleGeminiSubmit = useCallback(
+    (value: string) => {
+      onSubmit(value);
+    },
+    [onSubmit],
+  );
+
+  const handleThirdPartySubmit = useCallback(() => {
+    settings.setValue(
+      SettingScope.User,
+      'security.auth.apiKey',
+      apiKeyBuffer.text,
+    );
+    settings.setValue(
+      SettingScope.User,
+      'security.auth.baseUrl',
+      baseUrlBuffer.text,
+    );
+    setAuthContext({ requiresRestart: true });
+    setAuthState(AuthState.Unauthenticated);
+  }, [settings, apiKeyBuffer, baseUrlBuffer, setAuthContext, setAuthState]);
+
+  const handleClear = useCallback(() => {
     pendingPromise.current?.cancel();
 
     let isCancelled = false;
@@ -93,12 +261,13 @@ export function ApiAuthDialog({
 
     return wrappedPromise
       .then(() => {
-        buffer.setText('');
+        apiKeyBuffer.setText('');
+        baseUrlBuffer.setText('');
       })
       .catch((err) => {
         debugLogger.debug('Failed to clear API key:', err);
       });
-  };
+  }, [apiKeyBuffer, baseUrlBuffer]);
 
   useKeypress(
     (key) => {
@@ -122,40 +291,23 @@ export function ApiAuthDialog({
       <Text bold color={theme.text.primary}>
         Enter {settings.merged.security.auth.selectedType} Key
       </Text>
-      <Box marginTop={1} flexDirection="column">
-        <Text color={theme.text.primary}>
-          Please enter your {settings.merged.security.auth.selectedType} API
-          key. It will be securely stored in your system keychain.
-        </Text>
-        <Text color={theme.text.secondary}>
-          You can get an API key from{' '}
-          {settings.merged.security.auth.selectedType ===
-          AuthType.USE_GEMINI ? (
-            <Text color={theme.text.link}>
-              https://aistudio.google.com/app/apikey
-            </Text>
-          ) : (
-            <Text color={theme.text.link}>
-              your LLM provider&apos;s website
-            </Text>
-          )}
-        </Text>
-      </Box>
-      <Box marginTop={1} flexDirection="row">
-        <Box
-          borderStyle="round"
-          borderColor={theme.border.default}
-          paddingX={1}
-          flexGrow={1}
-        >
-          <TextInput
-            buffer={buffer}
-            onSubmit={handleSubmit}
-            onCancel={onCancel}
-            placeholder="Paste your API key here"
-          />
-        </Box>
-      </Box>
+      {isGemini ? (
+        <GeminiApiKeyForm
+          apiKeyBuffer={apiKeyBuffer}
+          onSubmit={handleGeminiSubmit}
+          onCancel={onCancel}
+        />
+      ) : (
+        <ThirdPartyApiForm
+          apiKeyBuffer={apiKeyBuffer}
+          baseUrlBuffer={baseUrlBuffer}
+          focusedField={focusedField}
+          onFocusChange={setFocusedField}
+          onSubmit={handleThirdPartySubmit}
+          onCancel={onCancel}
+          settings={settings}
+        />
+      )}
       {error && (
         <Box marginTop={1}>
           <Text color={theme.status.error}>{error}</Text>
