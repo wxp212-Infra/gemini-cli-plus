@@ -54,6 +54,7 @@ export enum AuthType {
   USE_VERTEX_AI = 'vertex-ai',
   LEGACY_CLOUD_SHELL = 'cloud-shell',
   COMPUTE_ADC = 'compute-default-credentials',
+  USE_OPENAI = 'openai',
 }
 
 export type ContentGeneratorConfig = {
@@ -61,6 +62,39 @@ export type ContentGeneratorConfig = {
   vertexai?: boolean;
   authType?: AuthType;
   proxy?: string;
+
+  /* add by infra */
+  baseUrl?: string;
+  model?: string;
+
+  timeout?: number; // Timeout configuration in milliseconds
+  maxRetries?: number; // Maximum retries for failed requests
+  disableCacheControl?: boolean; // Disable cache control for DashScope providers
+  samplingParams?: {
+    top_p?: number;
+    top_k?: number;
+    repetition_penalty?: number;
+    presence_penalty?: number;
+    frequency_penalty?: number;
+    temperature?: number;
+    max_tokens?: number;
+  };
+  reasoning?:
+    | false
+    | {
+        effort?: 'low' | 'medium' | 'high';
+        budget_tokens?: number;
+      };
+  userAgent?: string;
+  // Schema compliance mode for tool definitions
+  schemaCompliance?: 'auto' | 'openapi_30';
+  // Context window size override. If set to a positive number, it will override
+  // the automatic detection. Leave undefined to use automatic detection.
+  contextWindowSize?: number;
+  // Custom HTTP headers to be sent with requests
+  customHeaders?: Record<string, string>;
+  // Extra body parameters to be merged into the request body
+  extra_body?: Record<string, unknown>;
 };
 
 export async function createContentGeneratorConfig(
@@ -106,6 +140,19 @@ export async function createContentGeneratorConfig(
     return contentGeneratorConfig;
   }
 
+  /* add by infra */
+  const openaiApiKey = process.env['OPENAI_API_KEY'] || undefined;
+  if (authType === AuthType.USE_OPENAI) {
+    const cgc = config.getContentGeneratorConfig();
+    cgc.proxy = config.getProxy();
+
+    // priority of env is higher than config
+    if (openaiApiKey) {
+      cgc.apiKey = openaiApiKey;
+    }
+    return cgc;
+  }
+
   return contentGeneratorConfig;
 }
 
@@ -115,6 +162,17 @@ export async function createContentGenerator(
   sessionId?: string,
 ): Promise<ContentGenerator> {
   const generator = await (async () => {
+    /* add by infra */
+    const authType = config.authType;
+    if (authType === AuthType.USE_OPENAI) {
+      const { createOpenAIContentGenerator } = await import(
+        './openaiContentGenerator/index.js'
+      );
+      const baseGenerator = createOpenAIContentGenerator(config, gcConfig);
+      const generator = new LoggingContentGenerator(baseGenerator, gcConfig);
+      return generator;
+    }
+
     if (gcConfig.fakeResponses) {
       const fakeGenerator = await FakeContentGenerator.fromFile(
         gcConfig.fakeResponses,

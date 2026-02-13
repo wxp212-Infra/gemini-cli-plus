@@ -1194,6 +1194,10 @@ export class Config {
     return this.embeddingModel;
   }
 
+  getCliVersion(): string {
+    return this.clientVersion;
+  }
+
   getSandbox(): SandboxConfig | undefined {
     return this.sandbox;
   }
