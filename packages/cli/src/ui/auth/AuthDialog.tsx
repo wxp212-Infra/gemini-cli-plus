@@ -97,7 +97,10 @@ export function AuthDialog({
 
         settings.setValue(scope, 'security.auth.selectedType', authType);
 
-        if (authType === AuthType.USE_GEMINI) {
+        if (
+          authType === AuthType.USE_GEMINI ||
+          authType === AuthType.USE_OPENAI
+        ) {
           if (process.env['GEMINI_API_KEY'] !== undefined) {
             setAuthState(AuthState.Unauthenticated);
             return;
