@@ -44,7 +44,8 @@ const mockedUseKeypress = useKeypress as Mock;
 const mockedUseTextBuffer = useTextBuffer as Mock;
 
 // Mock helpers
-const createMockSettings = (): LoadedSettings => ({
+const createMockSettings = (): LoadedSettings =>
+  ({
     system: {
       settings: {},
       originalSettings: {},
@@ -78,7 +79,7 @@ const createMockSettings = (): LoadedSettings => ({
     forScope: vi.fn(),
     setValue: vi.fn(),
     setRemoteAdminSettings: vi.fn(),
-  } as unknown as LoadedSettings);
+  }) as unknown as LoadedSettings;
 
 describe('ApiAuthDialog', () => {
   const onSubmit = vi.fn();

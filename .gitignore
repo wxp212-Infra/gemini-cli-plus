@@ -63,3 +63,8 @@ gemini-debug.log
 evals/logs/
 
 *.code-workspace
+packages/cli/LICENSE
+packages/core/LICENSE
+packages/cli/README.md
+packages/core/README.md
+packages/core/.npmrc

@@ -60,3 +60,41 @@ package that should be managed as part of the workspace.
   root of the project using the `--workspace` flag. For example, to run the
   `build` script in the `cli` package, you can run
   `npm run build --workspace @google/gemini-cli`.
+
+## Publishing to NPM
+
+### prepare .npmrc
+
+npm login
+
+and then change the file
+
+```bash
+# .npmrc
+registry=https://registry.npmjs.org/
+//registry.npmjs.org/:_authToken=${NPM_TOKEN}
+```
+
+### Quick Publish
+
+To publish the CLI package to NPM:
+
+```bash
+# 1. Bump version (if needed)
+npm run release:version patch  # or minor/major
+
+# 2. Build the bundle
+npm run bundle
+
+# 3. Publish to NPM
+npm publish
+# Examples:
+# npm publish --tag beta --access public
+```
+
+### Verify Publishing
+
+```bash
+# Check if package is available
+npm view @wxp212/gemini-cli
+```

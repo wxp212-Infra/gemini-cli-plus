@@ -40,71 +40,18 @@ Learn all about Gemini CLI in our [documentation](https://geminicli.com/docs/).
 
 ```bash
 # Using npx (no installation required)
-npx @google/gemini-cli
+npx @wxp212/gemini-cli
 ```
 
 #### Install globally with npm
 
 ```bash
-npm install -g @google/gemini-cli
-```
-
-#### Install globally with Homebrew (macOS/Linux)
-
-```bash
-brew install gemini-cli
-```
-
-#### Install globally with MacPorts (macOS)
-
-```bash
-sudo port install gemini-cli
-```
-
-#### Install with Anaconda (for restricted environments)
-
-```bash
-# Create and activate a new environment
-conda create -y -n gemini_env -c conda-forge nodejs
-conda activate gemini_env
-
-# Install Gemini CLI globally via npm (inside the environment)
-npm install -g @google/gemini-cli
+npm install -g @wxp212/gemini-cli
 ```
 
 ## Release Cadence and Tags
 
 See [Releases](./docs/releases.md) for more details.
-
-### Preview
-
-New preview releases will be published each week at UTC 2359 on Tuesdays. These
-releases will not have been fully vetted and may contain regressions or other
-outstanding issues. Please help us test and install with `preview` tag.
-
-```bash
-npm install -g @google/gemini-cli@preview
-```
-
-### Stable
-
-- New stable releases will be published each week at UTC 2000 on Tuesdays, this
-  will be the full promotion of last week's `preview` release + any bug fixes
-  and validations. Use `latest` tag.
-
-```bash
-npm install -g @google/gemini-cli@latest
-```
-
-### Nightly
-
-- New releases will be published each day at UTC 0000. This will be all changes
-  from the main branch as represented at time of release. It should be assumed
-  there are pending validations and issues. Use `nightly` tag.
-
-```bash
-npm install -g @google/gemini-cli@nightly
-```
 
 ## 📋 Key Features
 
@@ -348,6 +295,35 @@ custom tools:
 
 See the [MCP Server Integration guide](./docs/tools/mcp-server.md) for setup
 instructions.
+
+## 🔧 VS Code Extension
+
+### Building VSIX Manually
+
+If you encounter compatibility issues with the published VSCode Gemini CLI
+Companion extension, you can manually build and install the VSIX package:
+
+```bash
+# Navigate to the vscode-ide-companion directory
+cd packages/vscode-ide-companion
+
+# Install dependencies
+npm install
+
+# Build and package the VSIX file
+npm run package
+```
+
+The VSIX file will be generated in the `packages/vscode-ide-companion` directory
+with a name like `gemini-cli-vscode-ide-companion-<version>.vsix`.
+
+To install the manually built extension:
+
+1. Open VS Code
+2. Go to **Extensions** (Ctrl+Shift+X)
+3. Click the **...** menu in the extensions panel
+4. Select **Install from VSIX...**
+5. Navigate to and select the generated `.vsix` file
 
 ## 🤝 Contributing
 
