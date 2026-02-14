@@ -948,6 +948,10 @@ export class Config {
     await this.geminiClient.initialize();
   }
 
+  updateContentGeneratorConfig(contentGeneratorConfig: ContentGeneratorConfig) {
+    this.contentGeneratorConfig = contentGeneratorConfig;
+  }
+
   getContentGenerator(): ContentGenerator {
     return this.contentGenerator;
   }

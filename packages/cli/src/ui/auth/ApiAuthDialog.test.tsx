@@ -13,7 +13,8 @@ import {
   useTextBuffer,
   type TextBuffer,
 } from '../components/shared/text-buffer.js';
-import { clearApiKey } from '@google/gemini-cli-core';
+import { clearApiKey, AuthType } from '@google/gemini-cli-core';
+import type { LoadedSettings, MergedSettings } from '../../config/settings.js';
 
 // Mocks
 vi.mock('@google/gemini-cli-core', async (importOriginal) => {
@@ -42,9 +43,49 @@ vi.mock('../contexts/UIStateContext.js', () => ({
 const mockedUseKeypress = useKeypress as Mock;
 const mockedUseTextBuffer = useTextBuffer as Mock;
 
+// Mock helpers
+const createMockSettings = (): LoadedSettings => ({
+    system: {
+      settings: {},
+      originalSettings: {},
+    },
+    systemDefaults: {
+      settings: {},
+      originalSettings: {},
+    },
+    user: {
+      settings: {},
+      originalSettings: {},
+    },
+    workspace: {
+      settings: {},
+      originalSettings: {},
+    },
+    isTrusted: true,
+    errors: [],
+    merged: {
+      security: {
+        auth: {
+          selectedType: AuthType.USE_GEMINI,
+          apiKey: '',
+          baseUrl: '',
+        },
+      },
+      model: {
+        name: '',
+      },
+    } as MergedSettings,
+    forScope: vi.fn(),
+    setValue: vi.fn(),
+    setRemoteAdminSettings: vi.fn(),
+  } as unknown as LoadedSettings);
+
 describe('ApiAuthDialog', () => {
   const onSubmit = vi.fn();
   const onCancel = vi.fn();
+  const setAuthState = vi.fn();
+  const setAuthContext = vi.fn();
+  const mockSettings = createMockSettings();
   let mockBuffer: TextBuffer;
 
   beforeEach(() => {
@@ -67,7 +108,13 @@ describe('ApiAuthDialog', () => {
 
   it('renders correctly', () => {
     const { lastFrame } = render(
-      <ApiAuthDialog onSubmit={onSubmit} onCancel={onCancel} />,
+      <ApiAuthDialog
+        settings={mockSettings}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+        setAuthState={setAuthState}
+        setAuthContext={setAuthContext}
+      />,
     );
     expect(lastFrame()).toMatchSnapshot();
   });
@@ -75,8 +122,11 @@ describe('ApiAuthDialog', () => {
   it('renders with a defaultValue', () => {
     render(
       <ApiAuthDialog
+        settings={mockSettings}
         onSubmit={onSubmit}
         onCancel={onCancel}
+        setAuthState={setAuthState}
+        setAuthContext={setAuthContext}
         defaultValue="test-key"
       />,
     );
@@ -102,7 +152,15 @@ describe('ApiAuthDialog', () => {
     'calls $expectedCall.name when $keyName is pressed',
     ({ keyName, sequence, expectedCall, args }) => {
       mockBuffer.text = 'submitted-key'; // Set for the onSubmit case
-      render(<ApiAuthDialog onSubmit={onSubmit} onCancel={onCancel} />);
+      render(
+        <ApiAuthDialog
+          settings={mockSettings}
+          onSubmit={onSubmit}
+          onCancel={onCancel}
+          setAuthState={setAuthState}
+          setAuthContext={setAuthContext}
+        />,
+      );
       // calls[0] is the ApiAuthDialog's useKeypress (Ctrl+C handler)
       // calls[1] is the TextInput's useKeypress (typing handler)
       const keypressHandler = mockedUseKeypress.mock.calls[1][0];
@@ -122,8 +180,11 @@ describe('ApiAuthDialog', () => {
   it('displays an error message', () => {
     const { lastFrame } = render(
       <ApiAuthDialog
+        settings={mockSettings}
         onSubmit={onSubmit}
         onCancel={onCancel}
+        setAuthState={setAuthState}
+        setAuthContext={setAuthContext}
         error="Invalid API Key"
       />,
     );
@@ -132,7 +193,15 @@ describe('ApiAuthDialog', () => {
   });
 
   it('calls clearApiKey and clears buffer when Ctrl+C is pressed', async () => {
-    render(<ApiAuthDialog onSubmit={onSubmit} onCancel={onCancel} />);
+    render(
+      <ApiAuthDialog
+        settings={mockSettings}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+        setAuthState={setAuthState}
+        setAuthContext={setAuthContext}
+      />,
+    );
     // Call 0 is ApiAuthDialog (isActive: true)
     // Call 1 is TextInput (isActive: true, priority: true)
     const keypressHandler = mockedUseKeypress.mock.calls[0][0];

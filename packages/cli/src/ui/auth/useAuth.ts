@@ -11,6 +11,7 @@ import {
   type Config,
   loadApiKey,
   debugLogger,
+  type ContentGeneratorConfig,
 } from '@google/gemini-cli-core';
 import { getErrorMessage } from '@google/gemini-cli-core';
 import { AuthState } from '../types.js';
@@ -123,6 +124,16 @@ export const useAuthCommand = (
       }
 
       try {
+        if (authType === AuthType.USE_OPENAI) {
+          const contentGeneratorConfig: Partial<ContentGeneratorConfig> = {
+            authType: AuthType.USE_OPENAI,
+            baseUrl: settings.merged.security.auth.baseUrl,
+            apiKey: settings.merged.security.auth.apiKey,
+            model: settings.merged.model.name,
+          };
+          config.updateContentGeneratorConfig(contentGeneratorConfig);
+        }
+
         await config.refreshAuth(authType);
 
         debugLogger.log(`Authenticated via "${authType}".`);
